@@ -44,6 +44,7 @@ add_option(parser, '-l', '--log-parsing', dest='log_parsing', help='Only parse l
 
 add_option(parser, '-t', '--typesetting', dest='typesetting', help='Only typeset', action='store_false')
 
+add_option(parser, '-b', '--bibtex', dest='biblio', help='Only run BibTeX', action='store_true')
 
 parser.add_argument('tex_path', type=str, metavar='tex path', help='path to tex file')
 
@@ -51,6 +52,8 @@ parser.add_argument('tex_opts', nargs='*')
 
 args = parser.parse_args()
 
+if args.biblio:
+    parser.parse_args(args=['--typesetting', args.tex_path], namespace=args)
 
 typesetter = Typesetter(**args.__dict__)
 try:

@@ -186,6 +186,8 @@ class Typesetter(object):
 
 	log_parsing = True
 
+	biblio = False
+
 	halt_on_errors = True
 
 	open_after = False
@@ -242,6 +244,14 @@ class Typesetter(object):
 
 		full_path = paths['full_path']
 
+		if self.biblio:
+			# run BibTeX
+			time_start = time.time()
+			self.bibtex(paths['file_base'], self.tex_opts)
+			time_end = time.time()
+			success_message = 'BibTeX "{name}" completed in {time:.1f}s.'.format(name=full_path, time=(time_end - time_start))
+			self.logger.success(success_message)
+
 		if self.typesetting:
 			# Typeset
 			time_start = time.time()
@@ -249,8 +259,7 @@ class Typesetter(object):
 			time_end = time.time()
 			success_message = 'Typesetting of "{name}" completed in {time:.1f}s.'.format(name=full_path, time=(time_end - time_start))
 
-
-		if self.log_parsing:
+		if self.log_parsing and not self.biblio:
 			# Parse log
 			log_file_path = self.log_file_path(paths['base'], paths['file_base'])
 			self.process_log(log_file_path)
@@ -265,6 +274,9 @@ class Typesetter(object):
 
 	def engine(self):
 		return ['pdflatex','xelatex'][self.xetex]
+
+	def bib_engine(self):
+		return 'bibtex'
 
 	def process_parser(self, parser):
 		"""
@@ -310,6 +322,14 @@ class Typesetter(object):
 			args.insert(-1, '-halt-on-error')
 		return args
 
+	def bibtex_args(self):
+		"""
+		Arguments to the bibtex command.
+		"""
+		args = [self.bib_engine(),]
+		return args
+
+
 	@classmethod
 	def paths(self, tex_path):
 		"""
@@ -352,6 +372,23 @@ class Typesetter(object):
 			arguments.append(full_path)
 		else:
 			arguments.extend(texopts)
+		self.logger.debug(arguments)
+		output = subprocess.Popen(arguments, stdout=subprocess.PIPE).communicate()[0]
+		self.logger.message(output.splitlines()[0])
+
+	def bibtex(self, full_path, bibopts=None):
+		"""
+		Typeset one given file.
+		"""
+		# run bibtex
+		now = datetime.datetime.now().strftime('%Y-%m-%d %H.%M.%S')
+		self.logger.message("\t[{now}] {engine} {file}".format(engine=self.bib_engine(), file=full_path, now=now))
+		arguments = self.bibtex_args()
+		## append file name
+		if not bibopts:
+			arguments.append(full_path)
+		else:
+			arguments.extend(bibopts)
 		self.logger.debug(arguments)
 		output = subprocess.Popen(arguments, stdout=subprocess.PIPE).communicate()[0]
 		self.logger.message(output.splitlines()[0])
