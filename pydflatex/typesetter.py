@@ -158,6 +158,7 @@ class LaTeXError(Exception):
 class Typesetter(object):
 	def __init__(self, tex_path=None, **options):
 		self.tex_path = tex_path
+		self.tex_opts = None
 		# storing the options
 		for k, v in options.items():
 			self.__setattr__(k, v)
@@ -244,7 +245,7 @@ class Typesetter(object):
 		if self.typesetting:
 			# Typeset
 			time_start = time.time()
-			self.typeset(full_path)
+			self.typeset(full_path, self.tex_opts)
 			time_end = time.time()
 			success_message = 'Typesetting of "{name}" completed in {time:.1f}s.'.format(name=full_path, time=(time_end - time_start))
 
@@ -338,7 +339,7 @@ class Typesetter(object):
 			raise LaTeXError('File {0} not found'.format(full_path))
 		return {'base':base, 'file_base':file_base, 'root':root, 'full_path':full_path}
 
-	def typeset(self, full_path, ):
+	def typeset(self, full_path, texopts=None):
 		"""
 		Typeset one given file.
 		"""
@@ -346,8 +347,11 @@ class Typesetter(object):
 		now = datetime.datetime.now().strftime('%Y-%m-%d %H.%M.%S')
 		self.logger.message("\t[{now}] {engine} {file}".format(engine=self.engine(), file=full_path, now=now))
 		arguments = self.arguments()
-		# append file name
-		arguments.append(full_path)
+		## append file name
+		if not texopts:
+			arguments.append(full_path)
+		else:
+			arguments.extend(texopts)
 		self.logger.debug(arguments)
 		output = subprocess.Popen(arguments, stdout=subprocess.PIPE).communicate()[0]
 		self.logger.message(output.splitlines()[0])

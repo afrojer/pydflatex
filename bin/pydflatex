@@ -15,7 +15,7 @@ from pydflatex import Typesetter
 
 #setting up the command options
 from argparse import ArgumentParser
-usage = 'usage: %(prog)s [options] texfile1'
+usage = 'usage: %(prog)s [options] texfile {tex-options...}'
 description = '''Compile a tex file with pdflatex and make the auxiliary files invisible.
 Note that the '.tex' extension may be omitted'''
 parser = ArgumentParser(usage=usage, description=description)
@@ -46,6 +46,8 @@ add_option(parser, '-t', '--typesetting', dest='typesetting', help='Only typeset
 
 
 parser.add_argument('tex_path', type=str, metavar='tex path', help='path to tex file')
+
+parser.add_argument('tex_opts', nargs='*')
 
 args = parser.parse_args()
 
